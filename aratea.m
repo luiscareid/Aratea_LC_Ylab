@@ -289,7 +289,7 @@ window = ones(span,1)/span;
 %vez de la convolucion en n
 %handles.smFFo_dat=filter(ones(1,span)/span,1,handles.FFo_dat); %LC Dec13
 %Uso el filto paso bajas de ct2
-handles.smFFo_dat=lowpass_filter_ct2(handles.FFo_dat')';
+handles.smFFo_dat=lowpass_filter_ct2(double(handles.FFo_dat'))';
 %LCEn14 mantiene el mismo numero de puntos uso una ventana del 10% total de
 %puntos considerando una frecuencia de muestreo ~4 Hz. Funciona relindo
 
