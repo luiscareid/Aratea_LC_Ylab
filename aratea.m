@@ -81,6 +81,9 @@ function evalFFo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+handles.smooth=0; %Inicio de factores
+handles.smoothfactor=0.15;
+handles.threshold=50;
 handles.cell_number=1;
 set(handles.ncell, 'String', handles.cell_number);
 
@@ -107,15 +110,12 @@ std_dx=std(dx);
 hold
 handles.del=ones(1,n_cells); %0 indica que la celula ha sido borrada
 handles.spFFo_dat=zeros(size_dx,n_cells);
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 %borra las espigas de las celulas eliminadas
 plot(dx)
 hold
 clc
-
-handles.smooth=0; %Inicio del factor smooth
-handles.smoothfactor=0;
 
 guidata(hObject, handles); %Guarda los handles nuevos
 
@@ -152,16 +152,16 @@ dx=gradient(handles.FFo_dat(:,handles.cell_number));
 std_dx=std(dx);
 size_dx=size(handles.FFo_dat(:,handles.cell_number));
 hold
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 else
 dx=gradient(handles.smFFo_dat(:,handles.cell_number));
 % V.dt=1/2;P.gam=1-V.dt/5;dx=fast_oopsi(handles.smFFo_dat(:,handles.cell_number),V,P);
 std_dx=std(dx);
 size_dx=size(handles.smFFo_dat(:,handles.cell_number));
 hold
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 end
 
 plot(dx)
@@ -204,16 +204,16 @@ dx=gradient(handles.FFo_dat(:,handles.cell_number));
 std_dx=std(dx);
 size_dx=size(handles.FFo_dat(:,handles.cell_number));
 hold
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 else
 dx=gradient(handles.smFFo_dat(:,handles.cell_number));
 % V.dt=1/2;P.gam=1-V.dt/5;dx=fast_oopsi(handles.smFFo_dat(:,handles.cell_number),V,P);
 std_dx=std(dx);
 size_dx=size(handles.smFFo_dat(:,handles.cell_number));
 hold
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 end
 
 plot(dx)
@@ -233,13 +233,13 @@ function smoothfactor_Callback(hObject, eventdata, handles)
 span=str2double(get(hObject,'String')); % returns contents of smoothfactor as a double
 
 if isnan(span)
-    set(hObject, 'String', 2);
+    set(hObject, 'String', 0.15);
     errordlg('Input must be a number','Error');
 end
 
-handles.smoothfactor=1;
+handles.smoothfactor=span;
 
-handles.span=span;
+% handles.span=span;
 guidata(hObject, handles); %Guarda los handles nuevos
 
 
@@ -258,7 +258,7 @@ end
 
 
 
-% --- Executes on button press in smooth.
+% --- Executes on button press in smooth/filter.
 function smooth_Callback(hObject, eventdata, handles)
 % hObject    handle to smooth (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -266,22 +266,24 @@ function smooth_Callback(hObject, eventdata, handles)
 
 axes(handles.axes1);
 cla;
-
-if (handles.smoothfactor==0)
-    handles.span=2;
-    handles.smooth=handles.smooth + 1;
-    handles.smoothfactor=1;
-    span=handles.span;
-elseif (handles.smooth==0)
-    span = handles.span; % Size of the averaging window
-    handles.smooth=handles.smooth + 1;
-else
-    span = handles.span*handles.smooth; % Size of the averaging window
+if (handles.smooth==0)
     handles.smooth=handles.smooth + 1;
 end
 
+% if (handles.smoothfactor==0)
+%     handles.span=2;
+%     handles.smooth=handles.smooth + 1;
+%     handles.smoothfactor=1;
+%     span=handles.span;
+% elseif (handles.smooth==0)
+%     span = handles.span; % Size of the averaging window
+%     handles.smooth=handles.smooth + 1;
+% else
+%     span = handles.span*handles.smooth; % Size of the averaging window
+%     handles.smooth=handles.smooth + 1;
+% end
 
-window = ones(span,1)/span; 
+%window = ones(span,1)/span;
 %handles.ssFFo_dat(:,handles.cell_number)=convn(handles.sFFo_dat(:,handles.cell_number),window,'valid');
 
 % handles.smFFo_dat=convn(handles.FFo_dat,window,'valid'); %'same' en vez de 'valid' para que el arreglo de salida sea igual
@@ -289,7 +291,7 @@ window = ones(span,1)/span;
 %vez de la convolucion en n
 %handles.smFFo_dat=filter(ones(1,span)/span,1,handles.FFo_dat); %LC Dec13
 %Uso el filto paso bajas de ct2
-handles.smFFo_dat=lowpass_filter_ct2(double(handles.FFo_dat'))';
+handles.smFFo_dat=lowpass_filter_ct2(double(handles.FFo_dat'),handles.smoothfactor)';
 %LCEn14 mantiene el mismo numero de puntos uso una ventana del 10% total de
 %puntos considerando una frecuencia de muestreo ~4 Hz. Funciona relindo
 
@@ -310,8 +312,8 @@ std_dx=std(dx);
 [size_dx,n_cells]=size(handles.smFFo_dat);
 hold
 handles.spFFo_dat=zeros(size_dx,n_cells);
-handles.spFFo_dat(:,handles.cell_number)=spikes(dx,2,std_dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+handles.spFFo_dat(:,handles.cell_number)=spikes(dx,handles.threshold,std_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 plot(dx)
 hold
 clc
@@ -326,7 +328,8 @@ function reset_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.smooth=0;
-%handles.smoothfactor=0;
+% handles.smoothfactor=0.15;
+% handles.threshold=50;
 
 axes(handles.axes1);
 cla;
@@ -348,14 +351,14 @@ for ii=1:n_cells
 
     dxsp=handles.dFFo_dat(:,ii);
     std_dx=std(dxsp);
-    handles.spFFo_dat(:,ii)=spikes(dxsp,2,std_dx);    
+    handles.spFFo_dat(:,ii)=spikes(dxsp,handles.threshold,std_dx);    
 end
 
 dx=gradient(handles.FFo_dat(:,handles.cell_number));
 % V.dt=1/2;P.gam=1-V.dt/5;dx=fast_oopsi(handles.FFo_dat(:,handles.cell_number),V,P);
 
 std_dx=std(dx);
-show(dx*handles.del(handles.cell_number),2,std_dx,size_dx);
+show(dx*handles.del(handles.cell_number),handles.threshold,std_dx,size_dx);
 plot(dx)
 hold
 clc
@@ -394,8 +397,9 @@ for ii=1:n_cells
 
     dx=handles.dFFo_dat(:,ii);
     std_dx=std(dx);
-    handles.spFFo_dat(:,ii)=spikes(dx,2,std_dx);
+    handles.spFFo_dat(:,ii)=spikes(dx,handles.threshold,std_dx);
        if (sum(handles.spFFo_dat(:,ii))>=1)
+       handles.renFFo_dat(:,jj)=handles.FFo_dat(:,ii);    
        handles.rensmFFo_dat(:,jj)=handles.smFFo_dat(:,ii);
        handles.rendFFo_dat(:,jj)=handles.dFFo_dat(:,ii);
        handles.renspFFo_dat(:,jj)=handles.spFFo_dat(:,ii);
@@ -414,7 +418,7 @@ plot(handles.rensmFFo_dat)
 % plot(handles.renspplotFFo_dat,'+')
 
 %Salva los archivos como .dat
-FFo=handles.FFo_dat;
+FFo=handles.renFFo_dat;
 save FFo.dat FFo -ascii
 save FFo FFo
 
@@ -469,5 +473,34 @@ cla;
 
 guidata(hObject, handles); %Guarda los handles nuevos
 
+function threshold_Callback(hObject, eventdata, handles)
+% hObject    handle to threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hints: get(hObject,'String') returns contents of threshold as text
+%        str2double(get(hObject,'String')) returns contents of threshold as a double
 
+umbral=str2double(get(hObject,'String')); % returns contents of smoothfactor as a double
+
+if isnan(umbral)
+    set(hObject, 'String', 50);
+    errordlg('Input must be a number','Error');
+end
+
+handles.threshold=umbral;
+
+% handles.span=span;
+guidata(hObject, handles); %Guarda los handles nuevos
+
+% --- Executes during object creation, after setting all properties.
+function threshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to threshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

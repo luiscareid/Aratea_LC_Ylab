@@ -1,8 +1,6 @@
-function x = lowpass_filter_ct2(x)
+function x_filt = lowpass_filter_ct2(x,smvalue)
 % Use the filtfilt function so that we have zero phase lag.  Remember,
 % that x is a matrix, but the filtfilt command can handle this.
-
-
 % % Setup the options.
 % if size(x,2)<1000
 %     nlfilt=20;
@@ -32,7 +30,7 @@ if (nlfilt > len/3-1) % filt length must less than 1/3 of the data
     end
 end
 %frecuencia de muestreo en milisegundos LCen14
-normfreq_lpass = 0.15;%lpass/(Fs/2);	% 1 corresponds to Nyquist rate. La mitad de la 1/freq funciona
+normfreq_lpass = smvalue; %0.15;%lpass/(Fs/2);	% 1 corresponds to Nyquist rate. La mitad de la 1/freq funciona
 hfilt = fir1(nlfilt, normfreq_lpass, 'low');
-xfilt = filtfilt(hfilt, 1, x')'; %zero phase digital filter LCen14
-x = xfilt;
+x_filt = filtfilt(hfilt, 1, x')'; %zero phase digital filter LCen14
+
